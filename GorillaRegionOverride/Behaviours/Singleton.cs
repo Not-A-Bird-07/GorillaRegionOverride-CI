@@ -2,7 +2,7 @@
 
 namespace GorillaRegionOverride.Behaviours
 {
-    public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
+    internal class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         public static T Instance { get; private set; }
 

@@ -1,20 +1,19 @@
-﻿using GorillaComputer;
+﻿using GorillaComputer.Behaviours;
 using GorillaComputer.Extension;
-using GorillaComputer.Model;
-using GorillaNetworking;
+using GorillaComputer.Models;
 using GorillaRegionOverride.Behaviours;
 using System.Text;
 using UnityEngine;
 
-[assembly: AutoRegister]
+[assembly: ComputerScannable]
 namespace GorillaRegionOverride.Models
 {
-    [AutoRegister]
-    public class RegionPage : ComputerFunction
+    [ComputerCustomScreen]
+    public class Screen : ComputerScreen
     {
-        public override string Name => "Region";
+        public override string Title => "Region";
 
-        public override string Description => "Configure your region settings to use automatically choose a region or select your own";
+        public override string Summary => "Use [0-9] to select region\nPress [ENTER] to toggle region override";
 
         public bool OverrideRegion;
 
@@ -22,13 +21,13 @@ namespace GorillaRegionOverride.Models
 
         public string[] RegionTokens;
 
-        public override void OnFunctionOpened()
+        public override void OnScreenShow()
         {
             (OverrideRegion, Region) = Singleton<Main>.Instance.Data();
             RegionTokens = Singleton<Main>.Instance.GetRegionTokens();
         }
 
-        public override string GetFunctionText()
+        public override string GetContent()
         {
             StringBuilder str = new();
 
@@ -42,11 +41,11 @@ namespace GorillaRegionOverride.Models
             return str.ToString();
         }
 
-        public override void OnKeyPressed(GorillaKeyboardBindings key)
+        public override void ProcessScreen(KeyBinding key)
         {
             bool dirty = false;
 
-            if (key == GorillaKeyboardBindings.enter)
+            if (key == KeyBinding.enter)
             {
                 OverrideRegion ^= true;
                 dirty = true;
@@ -60,7 +59,7 @@ namespace GorillaRegionOverride.Models
 
             if (!dirty) return;
 
-            UpdateMonitor();
+            UpdateScreen();
             Singleton<Main>.Instance.Configure(OverrideRegion, Region);
         }
     }
