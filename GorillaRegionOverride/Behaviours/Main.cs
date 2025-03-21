@@ -1,12 +1,14 @@
 ﻿using GorillaRegionOverride.Models;
 using GorillaRegionOverride.Tools;
+using HarmonyLib;
 using System;
+using System.Linq;
 
 namespace GorillaRegionOverride.Behaviours
 {
     internal class Main : Singleton<Main>
     {
-        private NetworkSystem NetSys => NetworkSystem.Instance;
+        private static NetworkSystem NetSys => NetworkSystem.Instance;
 
         public Patching Patching = new(Constants.Guid);
 
@@ -21,29 +23,28 @@ namespace GorillaRegionOverride.Behaviours
                 Logging.Warn("NetSys is not based on PUN backend - this mod won't have any effect on server region");
             }
 
-            (bool overrideRegion, int region) = Data();
-            Evaluate(overrideRegion, region);
+            (ERegionConfig region_config, int region_index) = Data;
+            Evaluate(region_config, region_index);
         }
 
-        public (bool overrideRegion, int region) Data() => (Config.OverrideRegion.Value, Config.Region.Value);
+        public (ERegionConfig region_config, int region_index) Data => (Config.OverrideRegion.Value, Config.Region.Value);
 
-        public void Configure(bool overrideRegion, int region)
+        public void Configure(ERegionConfig region_config, int region_index)
         {
             Logging.Info("Configure");
 
-            Config.OverrideRegion.Value = overrideRegion;
-            Config.Region.Value = region;
+            Config.OverrideRegion.Value = region_config;
+            Config.Region.Value = region_index;
 
-            Evaluate(overrideRegion, region);
+            Evaluate(region_config, region_index);
         }
 
-        public void Evaluate(bool overrideRegion, int region)
+        public void Evaluate(ERegionConfig region_config, int region_index)
         {
-            Logging.Info($"Evaluate ({overrideRegion}, {region})");
+            Logging.Info($"Evaluate ({region_config}, {region_index})");
 
-            if (overrideRegion)
+            if (region_config != ERegionConfig.AutoLowPing) // AutoLowPing is how the game handles it
             {
-                Patches.Region = region;
                 Patching.ApplyPatches();
             }
             else
@@ -52,18 +53,16 @@ namespace GorillaRegionOverride.Behaviours
             }
         }
 
-        public string[] GetRegionTokens() => NetSys.regionNames;
+        public static string[] GetRegionTokens() => NetSys.regionNames;
 
-        // https://doc.photonengine.com/pun/current/connection-and-authentication/regions
-        // Under the "Avaliable Regions" section
-
-        public string RegionFromToken(string regionToken) => regionToken switch
+        // Under the "Avaliable Regions" section: https://doc.photonengine.com/pun/current/connection-and-authentication/regions
+        public static string RegionFromToken(string regionToken) => regionToken switch
         {
-            // used regions
+            // used regions (by game)
             "us" => "USA, East",
             "usw" => "USA, West",
             "eu" => "Europe",
-            // other regions
+            // other regions (might be used by another mod for all i know)
             "asia" => "Asia",
             "au" => "Australia",
             "cae" => "Canada, East",
@@ -76,8 +75,40 @@ namespace GorillaRegionOverride.Behaviours
             "tr" => "Turkey",
             "uae" => "United Arab Emirates",
             "ussc" => "USA, South Central",
-            null => "Unknown",
             _ => throw new ArgumentOutOfRangeException("regionToken")
         };
+
+        public static string GetConfigName(ERegionConfig region_config) => region_config switch
+        {
+            ERegionConfig.AutoLowPing => "Auto (connection)",
+            ERegionConfig.AutoHighPlayers => "Auto (population)",
+            ERegionConfig.ManualRegion => "Manual",
+            _ => throw new ArgumentOutOfRangeException("region_config")
+        };
+
+        public static NetworkRegionInfo GetRegionInfo(int region_index) 
+        {
+            NetworkRegionInfo[] regionData = (NetworkRegionInfo[])AccessTools.Field(typeof(NetworkSystemPUN), "regionData").GetValue(NetSys);
+            return regionData[region_index];
+        }
+
+        public static int GetRegionIndex(ERegionConfig region_config)
+        {
+            if (region_config == ERegionConfig.AutoLowPing)
+            {
+                NetworkRegionInfo[] regionData = (NetworkRegionInfo[])AccessTools.Field(typeof(NetworkSystemPUN), "regionData").GetValue(NetSys);
+                int min = regionData.Min(data => data.pingToRegion);
+                int index = Array.IndexOf(regionData, Array.Find(regionData, data => data.pingToRegion == min));
+                return index;
+            }
+            if (region_config == ERegionConfig.AutoHighPlayers)
+            {
+                NetworkRegionInfo[] regionData = (NetworkRegionInfo[])AccessTools.Field(typeof(NetworkSystemPUN), "regionData").GetValue(NetSys);
+                int max = regionData.Max(data => data.playersInRegion);
+                int index = Array.IndexOf(regionData, Array.Find(regionData, data => data.playersInRegion == max));
+                return index;
+            }
+            return Instance.Data.region_index;
+        }
     }
 }
