@@ -6,11 +6,6 @@
   </PropertyGroup>
 
 	<!-- additional smuck! -->
-	<ItemGroup>
-		<Reference Include="GorillaComputer">
-			<HintPath>$(PluginsPath)\GorillaComputer\GorillaComputer.dll</HintPath>
-		</Reference>
-	</ItemGroup>
 
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -31,8 +26,17 @@
     <Reference Include="BepInEx.Harmony">
       <HintPath>$(BepInExAssemblyPath)\BepInEx.Harmony.dll</HintPath>
     </Reference>
+    <Reference Include="Bepinject">
+      <HintPath>$(PluginsPath)\Bepinject-Auros\Bepinject.dll</HintPath>
+    </Reference>
     <Reference Include="Cinemachine">
       <HintPath>$(GameAssemblyPath)\Cinemachine.dll</HintPath>
+    </Reference>
+    <Reference Include="ComputerInterface">
+      <HintPath>$(PluginsPath)\ComputerInterface\ComputerInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="ComputerInterface.Commands">
+      <HintPath>$(PluginsPath)\ComputerInterface.Commands\ComputerInterface.Commands.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Security">
       <HintPath>$(GameAssemblyPath)\Mono.Security.dll</HintPath>
@@ -276,6 +280,9 @@
     </Reference>
     <Reference Include="UnityEngine.XRModule">
       <HintPath>$(GameAssemblyPath)\UnityEngine.XRModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Zenject">
+      <HintPath>..\..\..\..\..\run\media\notabird\fast\SteamLibrary\steamapps\common\Gorilla Tag\BepInEx\plugins\Extenject\Zenject.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

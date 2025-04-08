@@ -1,12 +1,13 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using Bepinject;
 using GorillaRegionOverride.Behaviours;
 using UnityEngine;
 
 namespace GorillaRegionOverride
 {
-    [BepInDependency("dev.gorillacomputer", "1.0.0")]
+    [BepInDependency("tonimacaroni.computerinterface")]
     [BepInPlugin(Constants.Guid, Constants.Name, Constants.Version)]
     public class Plugin : BaseUnityPlugin
     {
@@ -25,6 +26,7 @@ namespace GorillaRegionOverride
             TiedLogSource = Logger;
             TiedConfigFile = Config;
             GorillaTagger.OnPlayerSpawned(() => new GameObject(typeof(Main).FullName).AddComponent<Main>());
+            Zenjector.Install<MainInstaller>().OnProject().WithConfig(Config).WithLog(Logger);
         }
     }
 }
